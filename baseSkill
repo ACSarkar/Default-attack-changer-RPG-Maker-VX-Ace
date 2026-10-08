@@ -1,0 +1,49 @@
+#Made by Angstrom Sarkar.
+
+#Swaps the basic attack skill of a party member, based on what weapon
+# they have equipped.
+#Made for use in RPG Maker VX Ace. I do not know if the same script will
+# work in other versions without edits.
+
+#If you want a weapon to change the user's base attack, write 
+# "<BASE ATTACK: x>" in the note tags, where "x" is the id of the attack you
+# want the base attack to be set to.
+class RPG::Weapon < RPG::EquipItem
+  def getBaseAttack
+    regexp = /<BASE ATTACK: (\d+)>/
+    self.note.match(regexp)
+    attackId = $1
+    return attackId.to_i    #If invalid (nil), this gets converted to zero.
+  end
+end
+#This just gets the correct attack id from the note tags. Does NOT check if the
+# note tag has a (properly formatted) id. That will be done later.
+
+#If the unit is a player character, checks their weapon to see
+# what theit base attack should be.
+class Game_BattlerBase
+  def attack_skill_id
+    if actor?
+      return getWeaponAttack
+    else
+      return 1   #"1" is the default base attack id.
+    end
+  end
+end
+
+#Checks what attack should be used as the default one. 
+class Game_Actor < Game_Battler 
+  def getWeaponAttack
+    for x in weapons
+      if x.nil?    #Skips to end if no weapon (use default).
+        next
+      end
+      attackId = x.getBaseAttack
+      if attackId == 0     #If it couldnt find anything, use default.
+        attackId = 1
+      end
+      return attackId
+    end
+    return 1
+  end
+end
